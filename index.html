@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- displays site properly based on user's device -->
+
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon-dice.svg">
+  <link rel="stylesheet" href="./index.css">
+  <title>Amor Fati | Life Quotes</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+
+  <svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="dice" width="24" height="24" viewBox="0 0 24 24">
+      <path
+        d="M20 0H4a4.005 4.005 0 0 0-4 4v16a4.005 4.005 0 0 0 4 4h16a4.005 4.005 0 0 0 4-4V4a4.005 4.005 0 0 0-4-4ZM7.5 18a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm0-9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm4.5 4.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm4.5 4.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm0-9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"
+        fill="#1f2732" />
+    </symbol>
+  </svg>
+
+  <div id="app">
+    <p class="title">Amor Fati - Life Quotes</p>
+    <div class="quote-container">
+      <div v-if="loading" class="loading-spinner"></div>
+      <div v-if="!loading">
+        <h2 id="author">{{ author }}</h2>
+        <h1 id="quote">"{{ quote }}"</h1>
+      </div>
+      <img src="./images/pattern-divider-mobile.svg" alt="divider">
+      <div @click="roll" id="roll">
+        <svg>
+          <use href="#dice" id="icon-dice"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  
+  <!-- <div class="attribution">
+    Life Quotes Generator by <a href="https://melissamyra.space" target="_blank">Melissa Myra</a>.
+  </div> -->
+  <script>
+    const { createApp } = Vue
+
+    createApp({
+      mounted() {
+        this.roll();
+      },
+      data() {
+        return {
+          author: '',
+          quote: '',
+          apiKey: 'vi7KQ3nrzZpgh41kPzrg8A==Ww52qn0TpeEaPVvt',
+          loading: true
+        }
+      },
+      methods: {
+        async roll() {
+          this.loading = true;
+          const response = await fetch('https://api.api-ninjas.com/v1/quotes?category=life',
+            //include API key
+            { headers: { 'X-Api-Key': this.apiKey } });
+          const responseJson = await response.json();
+
+          //save response data
+          this.author = await responseJson[0].author;
+          this.quote = await responseJson[0].quote;
+          this.loading = false;
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
