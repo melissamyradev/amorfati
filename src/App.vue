@@ -2,14 +2,12 @@
   <p class="title">Amor Fati - Life Quotes</p>
   <div class="quote-container">
     <div v-if="loading" class="loading-spinner"></div>
-    <Transition name="fadeInText" mode="out-in">
-      <div v-if="!loading">
-        <h2 class="text" id="author" :key="author">{{ author }}</h2>
-        <h1 class="text" id="quote" :key="quote">"{{ quote }}"</h1>
-      </div>
-    </Transition>
+    <div v-if="!loading">
+      <h2 :class="{animatefadein: !loading}" id="author" ref="author">{{ author }}</h2>
+      <h1 :class="{animatefadein: !loading}" id="quote" ref="quote">"{{ quote }}"</h1>
+    </div>
     <img src="./assets/images/pattern-divider-mobile.svg" alt="divider">
-    <div @click="rollAndFetch" id="roll">
+    <div @click="rollAndFetch" id="roll" ref="rollButton">
       <!-- use svg from images folder -->
       <svg>
         <use href="./assets/images/icon-dice.svg#dice" id="icon-dice"/>
@@ -37,6 +35,8 @@ export default {
   methods: {
     async fetchQuotes() {
 
+      // ---  Fetch and Render --- //
+
       const response = await fetch('https://api.api-ninjas.com/v1/quotes?category=life&limit=10',
         //include API key
         { headers: { 'X-Api-Key': this.apiKey } });
@@ -56,21 +56,40 @@ export default {
 
       this.loading = true;
 
-      // choose current quote to display;
-      this.author = this.quotesArr[0].author;
-      this.quote = this.quotesArr[0].quote;
-      this.quotesArr.shift();
+      // delay display to trigger css animation
+      setTimeout(() => {
 
-      this.loading = false;
+        // choose current quote to display;
+        this.author = this.quotesArr[0].author;
+        this.quote = this.quotesArr[0].quote;
+        this.quotesArr.shift();
+
+        this.loading = false;
+
+      }, .1)
 
     },
     rollAndFetch() {
 
       this.roll();
 
+      this.$refs.rollButton.blur();
+
+      // fetch silently without triggering render
       if (this.quotesArr.length < 5) {
-        setTimeout(() => {
-          this.fetchQuotes();
+        setTimeout(async() => {
+
+          const response = await fetch('https://api.api-ninjas.com/v1/quotes?category=life&limit=10',
+            //include API key
+            { headers: { 'X-Api-Key': this.apiKey } });
+          const responseJson = await response.json();
+
+          // filter quotes - only select shorter quotes & don't listen to Trump
+          const filteredQuotes = responseJson.filter(quote => quote.quote.length < 200 && quote.author !== 'Donald Trump');
+
+          // store filtered quotes
+          filteredQuotes.map(quote => this.quotesArr.push(quote));
+
         }, 1000);
       }
 
@@ -235,13 +254,13 @@ img {
 
 // handle transition???????????
 
-.fadeInText-enter-active,
-.fadeInText-leave-active {
-  transition: opacity 0.5s ease;
-}
+// .fadeInText-enter-active,
+// .fadeInText-leave-active {
+//   transition: opacity 0.5s ease;
+// }
 
-.fadeInText-enter-from,
-.fadeInText-leave-to {
-  opacity: 0;
-}
+// .fadeInText-enter-from,
+// .fadeInText-leave-to {
+//   opacity: 0;
+// }
 </style>
