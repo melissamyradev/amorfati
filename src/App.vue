@@ -3,11 +3,11 @@
   <div class="quote-container">
     <div v-if="loading" class="loading-spinner"></div>
     <div v-if="!loading">
-      <h2 :class="{animatefadein: !loading}" id="author" ref="author">{{ author }}</h2>
-      <h1 :class="{animatefadein: !loading}" id="quote" ref="quote">"{{ quote }}"</h1>
+      <h2 id="author" key="author">{{ author }}</h2>
+      <h1 :class="{ animatefadein: !loading }" id="quote" key="quote">"{{ quote }}"</h1>
     </div>
     <img src="./assets/images/pattern-divider-mobile.svg" alt="divider">
-    <div @click="rollAndFetch" id="roll" ref="rollButton">
+    <div @click="rollAndFetch" id="roll">
       <!-- use svg from images folder -->
       <svg>
         <use href="./assets/images/icon-dice.svg#dice" id="icon-dice"/>
@@ -19,8 +19,9 @@
 <script>
 export default {
   name: 'App',
-  mounted() {
-    this.fetchQuotes();
+  async mounted() {
+    await this.fetchQuotes();
+    this.roll();
   },
   data() {
     return {
@@ -35,8 +36,6 @@ export default {
   methods: {
     async fetchQuotes() {
 
-      // ---  Fetch and Render --- //
-
       const response = await fetch('https://api.api-ninjas.com/v1/quotes?category=life&limit=10',
         //include API key
         { headers: { 'X-Api-Key': this.apiKey } });
@@ -48,24 +47,19 @@ export default {
       // store filtered quotes
       filteredQuotes.map(quote => this.quotesArr.push(quote));
 
-      // display quote
-      this.roll();
-
     },
     roll() {
 
       this.loading = true;
 
+      // choose current quote to display;
+      this.author = this.quotesArr[0].author;
+      this.quote = this.quotesArr[0].quote;
+      this.quotesArr.shift();
+
       // delay display to trigger css animation
       setTimeout(() => {
-
-        // choose current quote to display;
-        this.author = this.quotesArr[0].author;
-        this.quote = this.quotesArr[0].quote;
-        this.quotesArr.shift();
-
         this.loading = false;
-
       }, .1)
 
     },
@@ -73,23 +67,10 @@ export default {
 
       this.roll();
 
-      this.$refs.rollButton.blur();
-
       // fetch silently without triggering render
       if (this.quotesArr.length < 5) {
-        setTimeout(async() => {
-
-          const response = await fetch('https://api.api-ninjas.com/v1/quotes?category=life&limit=10',
-            //include API key
-            { headers: { 'X-Api-Key': this.apiKey } });
-          const responseJson = await response.json();
-
-          // filter quotes - only select shorter quotes & don't listen to Trump
-          const filteredQuotes = responseJson.filter(quote => quote.quote.length < 200 && quote.author !== 'Donald Trump');
-
-          // store filtered quotes
-          filteredQuotes.map(quote => this.quotesArr.push(quote));
-
+        setTimeout(() => {
+          this.fetchQuotes();
         }, 1000);
       }
 
@@ -242,7 +223,7 @@ img {
 
 @keyframes fadein {
     0% {
-        transform: translateY(-50px);
+        transform: translateY(-10px);
         opacity: 0;
     }
 
@@ -251,16 +232,4 @@ img {
         opacity: 1;
     }
 }
-
-// handle transition???????????
-
-// .fadeInText-enter-active,
-// .fadeInText-leave-active {
-//   transition: opacity 0.5s ease;
-// }
-
-// .fadeInText-enter-from,
-// .fadeInText-leave-to {
-//   opacity: 0;
-// }
 </style>
